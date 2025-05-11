@@ -35,6 +35,31 @@ const App = () => {
   const [swiperInstance, setSwiperInstance] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
+  const handleSubmitAnother = () => {
+  // Reset all form data to initial empty state
+  setFormData({
+    nama: '', nim: '', fakultas: '', prodi: '', asal_ut: '',
+    semester: '', email: '', no_hp: ''
+  });
+  
+  // Reset all answers
+  setAnswers({});
+  
+  // Reset submission status
+  setSubmitStatus(null);
+  
+  // Navigate back to the first slide (identity form)
+  swiperInstance.slideTo(0);
+  setActiveIndex(0);
+  
+  // Clear localStorage to start fresh
+  localStorage.removeItem('formData');
+  localStorage.removeItem('answers');
+  
+  // Scroll to top of page
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
   // Fetch questions from Supabase
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -298,15 +323,26 @@ const App = () => {
                   </button>
                 </>
               ) : (
-                <>
-                  <svg className="w-24 h-24 text-green-500 mb-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <h2 className="text-3xl font-bold text-blue-800 mb-3">Terima kasih!</h2>
-                  <p className="text-blue-600 text-lg mb-4">Kami menghargai partisipasi Anda dalam survei ini.</p>
-                  <p className="text-blue-500">Masukan Anda membantu kami meningkatkan layanan Universitas Terbuka.</p>
-                </>
-              )}
+  <>
+    <svg className="w-24 h-24 text-green-500 mb-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
+    <h2 className="text-3xl font-bold text-blue-800 mb-3">Terima kasih!</h2>
+    <p className="text-blue-600 text-lg mb-4">Kami menghargai partisipasi Anda dalam survei ini.</p>
+    <p className="text-blue-500 mb-6">Masukan Anda membantu kami meningkatkan layanan Universitas Terbuka.</p>
+    
+    {/* Add the Submit Another Response button */}
+    <button 
+      onClick={handleSubmitAnother}
+      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 font-medium flex items-center gap-2"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      Kirim Tanggapan Lain
+    </button>
+  </>
+)}
             </div>
           </SwiperSlide>
         </Swiper>
