@@ -255,26 +255,34 @@ const App = () => {
           }}
           onSwiper={setSwiperInstance}
           onSlideChange={(swiper) => {
-            const newIndex = swiper.activeIndex;
-            const oldIndex = activeIndex;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+  const newIndex = swiper.activeIndex;
+  const oldIndex = activeIndex;
 
-            if (oldIndex === categories.length && newIndex === categories.length + 1 && submitStatus !== 'success') {
-              swiper.slideTo(oldIndex, 0);
-              return;
-            }
+  // Always scroll after slide changes — works for both swipe and button click
+  setTimeout(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 10); // slight delay ensures DOM is updated
 
-            if (oldIndex === categories.length + 1 && newIndex !== categories.length + 1) {
-              swiper.slideTo(oldIndex, 0);
-              return;
-            }
+  // Prevent access to thank you page if not submitted
+  if (oldIndex === categories.length && newIndex === categories.length + 1 && submitStatus !== 'success') {
+    swiper.slideTo(oldIndex, 0);
+    return;
+  }
 
-            if (!isCurrentSlideComplete()) {
-              swiper.slideTo(oldIndex, 0);
-            } else {
-              setActiveIndex(newIndex);
-            }
-          }}
+  // Prevent swiping back from thank you page
+  if (oldIndex === categories.length + 1 && newIndex !== categories.length + 1) {
+    swiper.slideTo(oldIndex, 0);
+    return;
+  }
+
+  // Validation check for incomplete slides
+  if (!isCurrentSlideComplete()) {
+    swiper.slideTo(oldIndex, 0);
+  } else {
+    setActiveIndex(newIndex);
+  }
+}}
+
         >
           <SwiperSlide>
             <div className="p-4 md:p-6">
