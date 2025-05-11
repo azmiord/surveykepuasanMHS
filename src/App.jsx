@@ -17,10 +17,12 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const App = () => {
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem('formData');
-    return saved ? JSON.parse(saved) : {
-      nama: '', nim: '', fakultas: '', prodi: '', asal_ut: '',
-      semester: '', email: '', no_hp: ''
-    };
+    return saved
+      ? JSON.parse(saved)
+      : {
+          nama: '', nim: '', fakultas: '', prodi: '', asal_ut: '',
+          semester: '', email: '', no_hp: ''
+        };
   });
 
   const [isIdentityValid, setIsIdentityValid] = useState(false);
@@ -36,46 +38,41 @@ const App = () => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const handleSubmitAnother = () => {
-  // Reset all form data to initial empty state
-  setFormData({
-    nama: '', nim: '', fakultas: '', prodi: '', asal_ut: '',
-    semester: '', email: '', no_hp: ''
-  });
+    setFormData({
+      nama: '', nim: '', fakultas: '', prodi: '', asal_ut: '',
+      semester: '', email: '', no_hp: ''
+    });
 
-  setIsIdentityValid(false); // Reset validation state
-  setAnswers({});
-  setSubmitStatus(null);
+    setIsIdentityValid(false);
+    setAnswers({});
+    setSubmitStatus(null);
 
-  localStorage.removeItem('formData');
-  localStorage.removeItem('answers');
+    localStorage.removeItem('formData');
+    localStorage.removeItem('answers');
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  // Delay the swiper slide to make sure states are reset before navigation
-  setTimeout(() => {
-    swiperInstance.slideTo(0);
-    setActiveIndex(0);
-  }, 100); // 100ms is usually enough
-};
+    setTimeout(() => {
+      swiperInstance.slideTo(0);
+      setActiveIndex(0);
+    }, 100);
+  };
 
-  // Fetch questions from Supabase
   useEffect(() => {
     const fetchQuestions = async () => {
       setIsLoading(true);
-      
       try {
         const { data, error } = await supabase
           .from('questions')
           .select('*')
           .order('category_order')
           .order('service_order');
-          
+
         if (error) throw error;
-        
-        // Group questions by category
+
         const groupedCategories = [];
         const categoryMap = new Map();
-        
+
         data.forEach(question => {
           if (!categoryMap.has(question.category_display_name)) {
             categoryMap.set(question.category_display_name, {
@@ -85,20 +82,19 @@ const App = () => {
             });
             groupedCategories.push(categoryMap.get(question.category_display_name));
           }
-          
+
           categoryMap.get(question.category_display_name).questions.push({
             id: question.id,
             text: question.service,
             order: question.service_order
           });
         });
-        
-        // Sort categories and questions by their order
+
         groupedCategories.sort((a, b) => a.order - b.order);
         groupedCategories.forEach(category => {
           category.questions.sort((a, b) => a.order - b.order);
         });
-        
+
         setCategories(groupedCategories);
         setIsLoading(false);
       } catch (error) {
@@ -106,7 +102,7 @@ const App = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchQuestions();
   }, []);
 
@@ -133,92 +129,79 @@ const App = () => {
   };
 
   const handleNavigation = (direction) => {
-  // Always scroll to top first for any navigation attempt
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  
-  if (direction === 'next') {
-    if (activeIndex === categories.length) {
-      // Handle submission
-      handleSubmit();
-    } else if (activeIndex < categories.length) {
-      swiperInstance.slideNext();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (direction === 'next') {
+      if (activeIndex === categories.length) {
+        handleSubmit();
+      } else if (activeIndex < categories.length) {
+        swiperInstance.slideNext();
+      }
     }
-  }
-  
-  if (direction === 'prev' && activeIndex > 0 && !isThankYouPage) {
-    // Prevent going back from the final thank you page
-    swiperInstance.slidePrev();
-  }
-};
+
+    if (direction === 'prev' && activeIndex > 0 && !isThankYouPage) {
+      swiperInstance.slidePrev();
+    }
+  };
 
   const handleSubmit = async () => {
-  try {
-    setSubmitStatus('submitting');
-    
-    // 1. Insert respondent data
-    const { data: respondentData, error: respondentError } = await supabase
-      .from('respondents')
-      .insert([formData])
-      .select();
-      
-    if (respondentError) throw respondentError;
-    
-    const respondentId = respondentData[0].id;
-    
-    // 2. Prepare answer data for submission
-    const answersToSubmit = [];
-    
-    categories.forEach(category => {
-      const categoryAnswers = answers[category.name] || {};
-      
-      category.questions.forEach(question => {
-        const response = categoryAnswers[question.text];
-        
-        if (response) {
-          // Map text responses to numbers (1-4)
-          const responseValue = ['Sangat Kurang Baik', 'Kurang Baik', 'Baik', 'Sangat Baik']
-            .indexOf(response) + 1;
-            
-          answersToSubmit.push({
-            respondent_id: respondentId,
-            question_id: question.id,
-            response: responseValue
-          });
-        }
+    try {
+      setSubmitStatus('submitting');
+
+      const { data: respondentData, error: respondentError } = await supabase
+        .from('respondents')
+        .insert([formData])
+        .select();
+
+      if (respondentError) throw respondentError;
+
+      const respondentId = respondentData[0].id;
+
+      const answersToSubmit = [];
+
+      categories.forEach(category => {
+        const categoryAnswers = answers[category.name] || {};
+
+        category.questions.forEach(question => {
+          const response = categoryAnswers[question.text];
+
+          if (response) {
+            const responseValue = ['Sangat Kurang Baik', 'Kurang Baik', 'Baik', 'Sangat Baik'].indexOf(response) + 1;
+            answersToSubmit.push({
+              respondent_id: respondentId,
+              question_id: question.id,
+              response: responseValue
+            });
+          }
+        });
       });
-    });
-    
-    // 3. Insert answers
-    const { error: answersError } = await supabase
-      .from('answers')
-      .insert(answersToSubmit);
-      
-    if (answersError) throw answersError;
-    
-    // 4. Clear local storage after successful submission
-    localStorage.removeItem('formData');
-    localStorage.removeItem('answers');
-    
-    // 5. Update status first, then navigate
-    setSubmitStatus('success');
-    
-    // 6. Use a small timeout to ensure state updates first
-    setTimeout(() => {
-      if (swiperInstance) {
-        swiperInstance.slideTo(categories.length + 1);
-        setActiveIndex(categories.length + 1);
-      }
-    }, 50);
-  } catch (error) {
-    console.error('Error submitting data:', error);
-    setSubmitStatus('error');
-  }
-};
+
+      const { error: answersError } = await supabase
+        .from('answers')
+        .insert(answersToSubmit);
+
+      if (answersError) throw answersError;
+
+      localStorage.removeItem('formData');
+      localStorage.removeItem('answers');
+
+      setSubmitStatus('success');
+
+      setTimeout(() => {
+        if (swiperInstance) {
+          swiperInstance.slideTo(categories.length + 1);
+          setActiveIndex(categories.length + 1);
+        }
+      }, 50);
+    } catch (error) {
+      console.error('Error submitting data:', error);
+      setSubmitStatus('error');
+    }
+  };
 
   const isIdentityPage = activeIndex === 0;
   const isSubmitPage = activeIndex === categories.length + 1;
   const isQuestionPage = activeIndex > 0 && activeIndex <= categories.length;
-
   const isLastQuestionPage = activeIndex === categories.length;
   const isThankYouPage = activeIndex === categories.length + 1;
 
@@ -245,7 +228,6 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-indigo-100 p-4 md:p-8 font-sans transition-all duration-500 ease-in-out">
       <div className="max-w-4xl mx-auto backdrop-blur-md bg-white/70 border border-white/30 rounded-3xl p-6 md:p-10 shadow-xl">
-
         {isQuestionPage && (
           <ProgressIndicator activeIndex={activeIndex} total={categories.length} />
         )}
@@ -253,54 +235,47 @@ const App = () => {
         {isIdentityPage && (
           <div className="text-center mb-8">
             <img src="ut-logo.png" alt="UT Logo" className="mx-auto w-20 h-20 md:w-24 md:h-24 mb-4" />
-            <h1 className="text-3xl md:text-4xl font-bold text-blue-800 mb-1">
-              Survey Kepuasan Mahasiswa
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-800 mb-1">Survey Kepuasan Mahasiswa</h1>
             <p className="text-lg text-blue-600">Universitas Terbuka Indonesia</p>
           </div>
         )}
 
         <Swiper
-  effect="coverflow"
-  grabCursor={true}
-  allowTouchMove={true} // Keep this enabled so programmatic navigation works
-  modules={[EffectCoverflow]}
-  className="max-w-xl mx-auto swiper-container"
-  coverflowEffect={{
-    rotate: 30,
-    stretch: 10,
-    depth: 100,
-    modifier: 1,
-    slideShadows: false,
-  }}
-  onSwiper={setSwiperInstance}
-  onSlideChange={(swiper) => {
-    const newIndex = swiper.activeIndex;
-    const oldIndex = activeIndex;
-    
-    // Always scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Special case: Only allow navigation to thank you page when submitStatus is 'success'
-    if (oldIndex === categories.length && newIndex === categories.length + 1 && submitStatus !== 'success') {
-      swiper.slideTo(oldIndex, 0); // Go back to the previous slide immediately
-      return;
-    }
-    
-    // Special case: Prevent swiping from thank you page to any other page
-    if (oldIndex === categories.length + 1 && newIndex !== categories.length + 1) {
-      swiper.slideTo(oldIndex, 0); // Stay on thank you page
-      return;
-    }
-    
-    // Regular validation check
-    if (!isCurrentSlideComplete()) {
-      swiper.slideTo(oldIndex, 0);
-    } else {
-      setActiveIndex(newIndex);
-    }
-  }}
->
+          effect="coverflow"
+          grabCursor={true}
+          allowTouchMove={true}
+          modules={[EffectCoverflow]}
+          className="max-w-xl mx-auto swiper-container"
+          coverflowEffect={{
+            rotate: 30,
+            stretch: 10,
+            depth: 100,
+            modifier: 1,
+            slideShadows: false,
+          }}
+          onSwiper={setSwiperInstance}
+          onSlideChange={(swiper) => {
+            const newIndex = swiper.activeIndex;
+            const oldIndex = activeIndex;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (oldIndex === categories.length && newIndex === categories.length + 1 && submitStatus !== 'success') {
+              swiper.slideTo(oldIndex, 0);
+              return;
+            }
+
+            if (oldIndex === categories.length + 1 && newIndex !== categories.length + 1) {
+              swiper.slideTo(oldIndex, 0);
+              return;
+            }
+
+            if (!isCurrentSlideComplete()) {
+              swiper.slideTo(oldIndex, 0);
+            } else {
+              setActiveIndex(newIndex);
+            }
+          }}
+        >
           <SwiperSlide>
             <div className="p-4 md:p-6">
               <IdentitasForm
@@ -339,7 +314,7 @@ const App = () => {
                   </svg>
                   <h2 className="text-3xl font-bold text-red-800 mb-3">Terjadi kesalahan!</h2>
                   <p className="text-red-600 mb-4">Mohon coba lagi nanti.</p>
-                  <button 
+                  <button
                     onClick={handleSubmit}
                     className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                   >
@@ -347,39 +322,36 @@ const App = () => {
                   </button>
                 </>
               ) : (
-  <>
-    <svg className="w-24 h-24 text-green-500 mb-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-    <h2 className="text-3xl font-bold text-blue-800 mb-3">Terima kasih!</h2>
-    <p className="text-blue-600 text-lg mb-4">Kami menghargai partisipasi Anda dalam survei ini.</p>
-    <p className="text-blue-500 mb-6">Masukan Anda membantu kami meningkatkan layanan Universitas Terbuka.</p>
-    
-    {/* Add the Submit Another Response button */}
-    <button 
-      onClick={handleSubmitAnother}
-      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 font-medium flex items-center gap-2"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-      Kirim Tanggapan Lain
-    </button>
-  </>
-)}
+                <>
+                  <svg className="w-24 h-24 text-green-500 mb-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <h2 className="text-3xl font-bold text-blue-800 mb-3">Terima kasih!</h2>
+                  <p className="text-blue-600 text-lg mb-4">Kami menghargai partisipasi Anda dalam survei ini.</p>
+                  <p className="text-blue-500 mb-6">Masukan Anda membantu kami meningkatkan layanan Universitas Terbuka.</p>
+                  <button
+                    onClick={handleSubmitAnother}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 font-medium flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Kirim Tanggapan Lain
+                  </button>
+                </>
+              )}
             </div>
           </SwiperSlide>
         </Swiper>
 
         {!isThankYouPage && (
-  <NavigationButtons
-    activeIndex={activeIndex}
-    maxIndex={categories.length}
-    handleNavigation={handleNavigation}
-    disableNext={!isCurrentSlideComplete() || submitStatus === 'submitting'}
-  />
-)}
-
+          <NavigationButtons
+            activeIndex={activeIndex}
+            maxIndex={categories.length}
+            handleNavigation={handleNavigation}
+            disableNext={!isCurrentSlideComplete() || submitStatus === 'submitting'}
+          />
+        )}
       </div>
     </div>
   );
