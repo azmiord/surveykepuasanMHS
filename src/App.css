@@ -1,0 +1,44 @@
+/* App.css */
+
+/* Container to wrap the Swiper */
+.swiper-container {
+  background: linear-gradient(90deg, #FF7E5F, #FEB47B); /* Warm colors */
+  background-size: cover;
+  background-position: center;
+  height: 100%;
+  position: relative;
+}
+
+/* Flip effect for each slide */
+.swiper-slide {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  transition: transform 0.7s ease-in-out;
+}
+
+.swiper-slide-flip {
+  transform: rotateY(180deg);
+}
+
+/* Front and back of the page for the flip */
+.swiper-slide .slide-front,
+.swiper-slide .slide-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+}
+
+.swiper-slide .slide-back {
+  transform: rotateY(180deg);
+  background: #fff;
+}
+
+/* Optional: Styling for the page content */
+.swiper-slide .slide-front {
+  background: #f0f0f0;
+  padding: 20px;
+  box-sizing: border-box;
+}
