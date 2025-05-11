@@ -252,7 +252,10 @@ const App = () => {
         <Swiper
           effect="coverflow"
           grabCursor={true}
-          allowTouchMove={true}
+          allowTouchMove={!(
+            (activeIndex === categories.length) || // Last question page
+            (activeIndex === categories.length + 1) // Final thank you page
+          )}
           modules={[EffectCoverflow]}
           className="max-w-xl mx-auto swiper-container"
           coverflowEffect={{
