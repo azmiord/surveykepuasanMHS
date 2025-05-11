@@ -41,23 +41,21 @@ const App = () => {
     nama: '', nim: '', fakultas: '', prodi: '', asal_ut: '',
     semester: '', email: '', no_hp: ''
   });
-  
-  // Reset all answers
+
+  setIsIdentityValid(false); // Reset validation state
   setAnswers({});
-  
-  // Reset submission status
   setSubmitStatus(null);
-  
-  // Navigate back to the first slide (identity form)
-  swiperInstance.slideTo(0);
-  setActiveIndex(0);
-  
-  // Clear localStorage to start fresh
+
   localStorage.removeItem('formData');
   localStorage.removeItem('answers');
-  
-  // Scroll to top of page
+
   window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Delay the swiper slide to make sure states are reset before navigation
+  setTimeout(() => {
+    swiperInstance.slideTo(0);
+    setActiveIndex(0);
+  }, 100); // 100ms is usually enough
 };
 
   // Fetch questions from Supabase
@@ -142,74 +140,87 @@ const App = () => {
     if (activeIndex === categories.length) {
       // Handle submission
       handleSubmit();
-    } else if (activeIndex < categories.length + 1) {
+    } else if (activeIndex < categories.length) {
       swiperInstance.slideNext();
     }
   }
-  if (direction === 'prev' && activeIndex > 0) {
+  
+  if (direction === 'prev' && activeIndex > 0 && !isThankYouPage) {
+    // Prevent going back from the final thank you page
     swiperInstance.slidePrev();
   }
 };
 
   const handleSubmit = async () => {
-    try {
-      setSubmitStatus('submitting');
+  try {
+    setSubmitStatus('submitting');
+    
+    // 1. Insert respondent data
+    const { data: respondentData, error: respondentError } = await supabase
+      .from('respondents')
+      .insert([formData])
+      .select();
       
-      // 1. Insert respondent data
-      const { data: respondentData, error: respondentError } = await supabase
-        .from('respondents')
-        .insert([formData])
-        .select();
+    if (respondentError) throw respondentError;
+    
+    const respondentId = respondentData[0].id;
+    
+    // 2. Prepare answer data for submission
+    const answersToSubmit = [];
+    
+    categories.forEach(category => {
+      const categoryAnswers = answers[category.name] || {};
+      
+      category.questions.forEach(question => {
+        const response = categoryAnswers[question.text];
         
-      if (respondentError) throw respondentError;
-      
-      const respondentId = respondentData[0].id;
-      
-      // 2. Prepare answer data for submission
-      const answersToSubmit = [];
-      
-      categories.forEach(category => {
-        const categoryAnswers = answers[category.name] || {};
-        
-        category.questions.forEach(question => {
-          const response = categoryAnswers[question.text];
-          
-          if (response) {
-            // Map text responses to numbers (1-4)
-            const responseValue = ['Sangat Kurang Baik', 'Kurang Baik', 'Baik', 'Sangat Baik']
-              .indexOf(response) + 1;
-              
-            answersToSubmit.push({
-              respondent_id: respondentId,
-              question_id: question.id,
-              response: responseValue
-            });
-          }
-        });
+        if (response) {
+          // Map text responses to numbers (1-4)
+          const responseValue = ['Sangat Kurang Baik', 'Kurang Baik', 'Baik', 'Sangat Baik']
+            .indexOf(response) + 1;
+            
+          answersToSubmit.push({
+            respondent_id: respondentId,
+            question_id: question.id,
+            response: responseValue
+          });
+        }
       });
+    });
+    
+    // 3. Insert answers
+    const { error: answersError } = await supabase
+      .from('answers')
+      .insert(answersToSubmit);
       
-      // 3. Insert answers
-      const { error: answersError } = await supabase
-        .from('answers')
-        .insert(answersToSubmit);
-        
-      if (answersError) throw answersError;
-      
-      // 4. Clear local storage after successful submission
-      localStorage.removeItem('formData');
-      localStorage.removeItem('answers');
-      
-      setSubmitStatus('success');
-      swiperInstance.slideNext();
-    } catch (error) {
-      console.error('Error submitting data:', error);
-      setSubmitStatus('error');
-    }
-  };
+    if (answersError) throw answersError;
+    
+    // 4. Clear local storage after successful submission
+    localStorage.removeItem('formData');
+    localStorage.removeItem('answers');
+    
+    // 5. Update status first, then navigate
+    setSubmitStatus('success');
+    
+    // 6. Use a small timeout to ensure state updates first
+    setTimeout(() => {
+      if (swiperInstance) {
+        swiperInstance.slideTo(categories.length + 1);
+        setActiveIndex(categories.length + 1);
+      }
+    }, 50);
+  } catch (error) {
+    console.error('Error submitting data:', error);
+    setSubmitStatus('error');
+  }
+};
 
   const isIdentityPage = activeIndex === 0;
   const isSubmitPage = activeIndex === categories.length + 1;
   const isQuestionPage = activeIndex > 0 && activeIndex <= categories.length;
+
+  const isLastQuestionPage = activeIndex === categories.length;
+  const isThankYouPage = activeIndex === categories.length + 1;
 
   const isCurrentSlideComplete = () => {
     if (activeIndex === 0) return isIdentityValid;
@@ -250,36 +261,46 @@ const App = () => {
         )}
 
         <Swiper
-          effect="coverflow"
-          grabCursor={true}
-          allowTouchMove={!(
-            (activeIndex === categories.length) || // Last question page
-            (activeIndex === categories.length + 1) // Final thank you page
-          )}
-          modules={[EffectCoverflow]}
-          className="max-w-xl mx-auto swiper-container"
-          coverflowEffect={{
-            rotate: 30,
-            stretch: 10,
-            depth: 100,
-            modifier: 1,
-            slideShadows: false,
-          }}
-          onSwiper={setSwiperInstance}
-          onSlideChange={(swiper) => {
-  const newIndex = swiper.activeIndex;
-  // Always scroll to top regardless of slide validation
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  
-  if (!isCurrentSlideComplete()) {
-    // If validation fails, go back to previous slide
-    // but we've already scrolled to top
-    swiper.slideTo(activeIndex);
-  } else {
-    setActiveIndex(newIndex);
-  }
-}}
-        >
+  effect="coverflow"
+  grabCursor={true}
+  allowTouchMove={true} // Keep this enabled so programmatic navigation works
+  modules={[EffectCoverflow]}
+  className="max-w-xl mx-auto swiper-container"
+  coverflowEffect={{
+    rotate: 30,
+    stretch: 10,
+    depth: 100,
+    modifier: 1,
+    slideShadows: false,
+  }}
+  onSwiper={setSwiperInstance}
+  onSlideChange={(swiper) => {
+    const newIndex = swiper.activeIndex;
+    const oldIndex = activeIndex;
+    
+    // Always scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Special case: Only allow navigation to thank you page when submitStatus is 'success'
+    if (oldIndex === categories.length && newIndex === categories.length + 1 && submitStatus !== 'success') {
+      swiper.slideTo(oldIndex, 0); // Go back to the previous slide immediately
+      return;
+    }
+    
+    // Special case: Prevent swiping from thank you page to any other page
+    if (oldIndex === categories.length + 1 && newIndex !== categories.length + 1) {
+      swiper.slideTo(oldIndex, 0); // Stay on thank you page
+      return;
+    }
+    
+    // Regular validation check
+    if (!isCurrentSlideComplete()) {
+      swiper.slideTo(oldIndex, 0);
+    } else {
+      setActiveIndex(newIndex);
+    }
+  }}
+>
           <SwiperSlide>
             <div className="p-4 md:p-6">
               <IdentitasForm
@@ -350,12 +371,14 @@ const App = () => {
           </SwiperSlide>
         </Swiper>
 
-        <NavigationButtons
-          activeIndex={activeIndex}
-          maxIndex={categories.length}
-          handleNavigation={handleNavigation}
-          disableNext={!isCurrentSlideComplete() || submitStatus === 'submitting'}
-        />
+        {!isThankYouPage && (
+  <NavigationButtons
+    activeIndex={activeIndex}
+    maxIndex={categories.length}
+    handleNavigation={handleNavigation}
+    disableNext={!isCurrentSlideComplete() || submitStatus === 'submitting'}
+  />
+)}
 
       </div>
     </div>
