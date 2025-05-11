@@ -110,19 +110,21 @@ const App = () => {
   };
 
   const handleNavigation = (direction) => {
-    if (direction === 'next') {
-      if (activeIndex === categories.length) {
-        // Handle submission
-        handleSubmit();
-      } else if (activeIndex < categories.length + 1) {
-        swiperInstance.slideNext();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
+  // Always scroll to top first for any navigation attempt
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  if (direction === 'next') {
+    if (activeIndex === categories.length) {
+      // Handle submission
+      handleSubmit();
+    } else if (activeIndex < categories.length + 1) {
+      swiperInstance.slideNext();
     }
-    if (direction === 'prev' && activeIndex > 0) {
-      swiperInstance.slidePrev();
-    }
-  };
+  }
+  if (direction === 'prev' && activeIndex > 0) {
+    swiperInstance.slidePrev();
+  }
+};
 
   const handleSubmit = async () => {
     try {
@@ -237,14 +239,18 @@ const App = () => {
           }}
           onSwiper={setSwiperInstance}
           onSlideChange={(swiper) => {
-            const newIndex = swiper.activeIndex;
-            if (!isCurrentSlideComplete()) {
-              swiper.slideTo(activeIndex);
-            } else {
-              setActiveIndex(newIndex);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-          }}
+  const newIndex = swiper.activeIndex;
+  // Always scroll to top regardless of slide validation
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  if (!isCurrentSlideComplete()) {
+    // If validation fails, go back to previous slide
+    // but we've already scrolled to top
+    swiper.slideTo(activeIndex);
+  } else {
+    setActiveIndex(newIndex);
+  }
+}}
         >
           <SwiperSlide>
             <div className="p-4 md:p-6">
