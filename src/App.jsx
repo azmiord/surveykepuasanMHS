@@ -242,6 +242,7 @@ const App = () => {
               swiper.slideTo(activeIndex);
             } else {
               setActiveIndex(newIndex);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             }
           }}
         >
