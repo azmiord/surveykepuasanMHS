@@ -80,9 +80,12 @@ const IdentitasForm = ({ formData, handleChange, onValidationChange }) => {
     if (!formData.prodi) newErrors.prodi = 'Wajib pilih prodi';
     if (!formData.nim) newErrors.nim = 'Wajib isi NIM';
     if (!formData.asal_ut) newErrors.asal_ut = 'Wajib pilih asal UT';
-    if (!formData.semester || isNaN(formData.semester) ||  formData.semester > 3) {
-      newErrors.semester = 'Minimal semester 3';
-    }
+    // if (!formData.semester || isNaN(formData.semester) ||  formData.semester > 3) {
+    //   newErrors.semester = 'Minimal semester 3';
+    // }
+    if (!formData.semester || isNaN(formData.semester) || formData.semester <= 3) {
+  newErrors.semester = 'Minimal semester 3';
+}
 
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Gunakan email Ecampus';
