@@ -232,7 +232,7 @@ const App = () => {
       <div className="max-w-4xl mx-auto backdrop-blur-md bg-white/70 border border-white/30 rounded-3xl p-6 md:p-10 shadow-xl">
         {!isThankYouPage && (
           <div className="text-center mb-8">
-            <img src="src\assets\logo_lppm.png" alt="UT Logo" className="mx-auto h-16 md:h-20 mb-4 object-contain" />
+            <img src="/logo_lppm.png" alt="UT Logo" className="mx-auto h-16 md:h-20 mb-4 object-contain" />
             <h1 className="text-3xl md:text-4xl font-bold text-black mb-1">Survey Kepuasan Mahasiswa</h1>
           </div>
         )}
