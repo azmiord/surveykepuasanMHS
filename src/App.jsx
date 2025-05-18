@@ -134,7 +134,7 @@ const App = () => {
     if (direction === 'next') {
       if (activeIndex === categories.length) {
         handleSubmit();
-      } else if (activeIndex < categories.length) {
+      } else if (activeIndex < categories.length + 1) {
         swiperInstance.slideNext();
       }
     }
@@ -189,8 +189,8 @@ const App = () => {
 
       setTimeout(() => {
         if (swiperInstance) {
-          swiperInstance.slideTo(categories.length + 1);
-          setActiveIndex(categories.length + 1);
+          swiperInstance.slideTo(categories.length + 2);
+          setActiveIndex(categories.length + 2);
         }
       }, 50);
     } catch (error) {
@@ -199,17 +199,19 @@ const App = () => {
     }
   };
 
-  const isIdentityPage = activeIndex === 0;
+  const isIntroPage = activeIndex === 0;
+  const isIdentityPage = activeIndex === 1;
   const isSubmitPage = activeIndex === categories.length + 1;
-  const isQuestionPage = activeIndex > 0 && activeIndex <= categories.length;
-  const isLastQuestionPage = activeIndex === categories.length;
-  const isThankYouPage = activeIndex === categories.length + 1;
+  const isQuestionPage = activeIndex > 1 && activeIndex <= categories.length + 1;
+  const isLastQuestionPage = activeIndex === categories.length + 1;
+  const isThankYouPage = activeIndex === categories.length + 2;
 
   const isCurrentSlideComplete = () => {
-    if (activeIndex === 0) return isIdentityValid;
-    if (activeIndex === categories.length + 1) return true;
+    if (activeIndex === 0) return true; // Intro page is always complete
+    if (activeIndex === 1) return isIdentityValid;
+    if (activeIndex === categories.length + 2) return true;
 
-    const currentCategory = categories[activeIndex - 1];
+    const currentCategory = categories[activeIndex - 2];
     const answered = answers[currentCategory.name] || {};
     return currentCategory.questions.every(question => answered[question.text]);
   };
@@ -228,17 +230,15 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-indigo-100 p-4 md:p-8 font-sans transition-all duration-500 ease-in-out">
       <div className="max-w-4xl mx-auto backdrop-blur-md bg-white/70 border border-white/30 rounded-3xl p-6 md:p-10 shadow-xl">
-        {isQuestionPage && (
-          <ProgressIndicator activeIndex={activeIndex} total={categories.length} />
-        )}
-
-        {isIdentityPage && (
+        {!isThankYouPage && (
           <div className="text-center mb-8">
-            {/* <img src="src\assets\logo_lppm.png" alt="UT Logo" className="mx-auto w-20 h-20 md:w-24 md:h-24 mb-4" /> */}
             <img src="src\assets\logo_lppm.png" alt="UT Logo" className="mx-auto h-16 md:h-20 mb-4 object-contain" />
-            {/* <h1 className="text-3xl md:text-4xl font-bold text-blue-800 mb-1">Survey Kepuasan Mahasiswa</h1> */}
             <h1 className="text-3xl md:text-4xl font-bold text-black mb-1">Survey Kepuasan Mahasiswa</h1>
           </div>
+        )}
+        
+        {isQuestionPage && (
+          <ProgressIndicator activeIndex={activeIndex - 1} total={categories.length} />
         )}
 
         <Swiper
@@ -256,35 +256,77 @@ const App = () => {
           }}
           onSwiper={setSwiperInstance}
           onSlideChange={(swiper) => {
-  const newIndex = swiper.activeIndex;
-  const oldIndex = activeIndex;
+            const newIndex = swiper.activeIndex;
+            const oldIndex = activeIndex;
 
-  // Always scroll after slide changes — works for both swipe and button click
-  setTimeout(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, 10); // slight delay ensures DOM is updated
+            // Always scroll after slide changes — works for both swipe and button click
+            setTimeout(() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 10); // slight delay ensures DOM is updated
 
-  // Prevent access to thank you page if not submitted
-  if (oldIndex === categories.length && newIndex === categories.length + 1 && submitStatus !== 'success') {
-    swiper.slideTo(oldIndex, 0);
-    return;
-  }
+            // Prevent access to thank you page if not submitted
+            if (oldIndex === categories.length + 1 && newIndex === categories.length + 2 && submitStatus !== 'success') {
+              swiper.slideTo(oldIndex, 0);
+              return;
+            }
 
-  // Prevent swiping back from thank you page
-  if (oldIndex === categories.length + 1 && newIndex !== categories.length + 1) {
-    swiper.slideTo(oldIndex, 0);
-    return;
-  }
+            // Prevent swiping back from thank you page
+            if (oldIndex === categories.length + 2 && newIndex !== categories.length + 2) {
+              swiper.slideTo(oldIndex, 0);
+              return;
+            }
 
-  // Validation check for incomplete slides
-  if (!isCurrentSlideComplete()) {
-    swiper.slideTo(oldIndex, 0);
-  } else {
-    setActiveIndex(newIndex);
-  }
-}}
-
+            // Validation check for incomplete slides
+            if (!isCurrentSlideComplete()) {
+              swiper.slideTo(oldIndex, 0);
+            } else {
+              setActiveIndex(newIndex);
+            }
+          }}
         >
+          {/* Intro Page */}
+          <SwiperSlide>
+            <div className="p-4 md:p-6">
+              <div className="text-center mb-6">
+                <div className="bg-blue-50 p-8 rounded-2xl border-l-4 border-blue-500 shadow-md">
+                  <h2 className="text-2xl font-bold text-blue-800 mb-6">Kepada Yth. Mahasiswa Universitas Terbuka</h2>
+                  
+                  <div className="space-y-4 text-left">
+                    <p className="text-gray-700 leading-relaxed">
+                      Universitas Terbuka sedang melakukan survei kepuasan terhadap pelayanan Universitas Terbuka kepada mahasiswa. Tujuan dari survei ini adalah untuk mengetahui tingkat kepuasan dan kemudahan pada pelayanan belajar di Universitas Terbuka.
+                    </p>
+                    
+                    <p className="text-gray-700 leading-relaxed">
+                      Mohon partisipasi Anda untuk mengisi survei ini. Terdapat 4 (empat) pilihan jawaban yang disediakan untuk setiap pernyataan. Pilihlah salah satu jawaban yang paling sesuai dengan pengalaman Anda. Semua identitas responden akan dirahasiakan.
+                    </p>
+                    
+                    <p className="text-gray-700 leading-relaxed">
+                      Partisipasi Anda sangat membantu pengembangan Universitas Terbuka menjadi lebih baik.
+                    </p>
+                  </div>
+                  
+                  <div className="mt-8 pt-6 border-t border-blue-200">
+                    <p className="text-gray-700 font-medium">Terima kasih.</p>
+                    <p className="text-blue-700 font-bold text-lg mt-1">UNIVERSITAS TERBUKA</p>
+                  </div>
+
+                  <div className="mt-10 flex justify-center">
+                    <button 
+                      onClick={() => handleNavigation('next')}
+                      className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 font-medium flex items-center gap-2 group"
+                    >
+                      Mulai Survey
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </SwiperSlide>
+
+          {/* Identity Form */}
           <SwiperSlide>
             <div className="p-4 md:p-6">
               <IdentitasForm
@@ -295,6 +337,7 @@ const App = () => {
             </div>
           </SwiperSlide>
 
+          {/* Questions */}
           {categories.map((category, idx) => (
             <SwiperSlide key={idx}>
               <div className="p-4 md:p-6">
@@ -308,6 +351,7 @@ const App = () => {
             </SwiperSlide>
           ))}
 
+          {/* Submit Page */}
           <SwiperSlide>
             <div className="p-6 flex flex-col items-center justify-center min-h-[300px] text-center">
               {submitStatus === 'submitting' ? (
@@ -353,9 +397,9 @@ const App = () => {
           </SwiperSlide>
         </Swiper>
 
-        {!isThankYouPage && (
+        {!isThankYouPage && !isIntroPage && (
           <NavigationButtons
-            activeIndex={activeIndex}
+            activeIndex={activeIndex - 1}
             maxIndex={categories.length}
             handleNavigation={handleNavigation}
             disableNext={!isCurrentSlideComplete() || submitStatus === 'submitting'}

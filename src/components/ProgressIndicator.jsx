@@ -1,4 +1,3 @@
-// components/ProgressIndicator.jsx
 import React from 'react';
 
 const ProgressIndicator = ({ activeIndex, total }) => {
@@ -6,13 +5,13 @@ const ProgressIndicator = ({ activeIndex, total }) => {
 
   return (
     <div className="mb-6">
-      <div className="text-sm font-medium text-blue-700 text-center">
+      <div className="text-sm font-medium text-center" style={{ color: '#1d4ed8' }}>
         Pertanyaan {activeIndex} dari {total}
       </div>
       <div className="w-full h-2 bg-gray-200 rounded-full mt-2">
         <div
-          className="h-full bg-blue-500 rounded-full transition-all duration-300"
-          style={{ width: `${progressPercent}%` }}
+          className="h-full rounded-full transition-all duration-300"
+          style={{ width: `${progressPercent}%`, backgroundColor: '#FFE600' }}
         />
       </div>
     </div>

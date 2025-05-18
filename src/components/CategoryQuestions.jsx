@@ -5,7 +5,7 @@ const CategoryQuestions = ({ category, questions, handleAnswerChange, currentAns
 
   return (
     <div className="space-y-10 pb-16">
-      <h2 className="text-xl md:text-2xl font-semibold text-blue-700 text-center mb-6">
+      <h2 className="text-xl md:text-2xl font-semibold text-black text-center mb-6">
         {category}
       </h2>
 
