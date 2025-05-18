@@ -234,7 +234,7 @@ const App = () => {
 
         {isIdentityPage && (
           <div className="text-center mb-8">
-            <img src="logo_lppm.png" alt="UT Logo" className="mx-auto w-40 h-20 md:w-24 md:h-24 mb-4" />
+            <img src="logo_ut.png" alt="UT Logo" className="mx-auto w-40 h-20 md:w-24 md:h-24 mb-4" />
             <h1 className="text-3xl md:text-4xl font-bold text-blue-800 mb-1">Survey Kepuasan Mahasiswa</h1>
             
           </div>
