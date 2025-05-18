@@ -78,7 +78,7 @@ const IdentitasForm = ({ formData, handleChange, onValidationChange }) => {
 
     if (!formData.fakultas) newErrors.fakultas = 'Wajib pilih fakultas';
     if (!formData.prodi) newErrors.prodi = 'Wajib pilih prodi';
-    if (!formData.nim) newErrors.nim = 'Wajib isi NIM';
+    if (!formData.nim) newErrors.nim = 'Wajib isi NIM. NIM hanya bisa untuk satu kali pengisian form';
     if (!formData.asal_ut) newErrors.asal_ut = 'Wajib pilih asal UT';
     if (!formData.semester || isNaN(formData.semester) || formData.semester < 3) {
   newErrors.semester = 'Minimal semester 3';

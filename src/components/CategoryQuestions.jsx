@@ -1,7 +1,13 @@
 import React from 'react';
 
-const CategoryQuestions = ({ category, questions, handleAnswerChange, currentAnswers = {} }) => {
-  const options = ['Sangat Kurang Baik', 'Kurang Baik', 'Baik', 'Sangat Baik'];
+const CategoryQuestions = ({ category, questions, handleAnswerChange, currentAnswers = {}, categoryIndex }) => {
+  // Determine which options to use based on the category index
+  // For slides 1,2,3,4,5,6,9 (which maps to indices 0,1,2,3,4,5,8) use "Sesuai" options
+  const useSesuaiOptions = [0, 1, 2, 3, 4, 5, 8].includes(categoryIndex);
+  
+  const options = useSesuaiOptions 
+    ? ['Sangat Kurang Sesuai', 'Kurang Sesuai', 'Sesuai', 'Sangat Sesuai']
+    : ['Sangat Kurang Baik', 'Kurang Baik', 'Baik', 'Sangat Baik'];
 
   return (
     <div className="space-y-10 pb-16">

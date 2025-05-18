@@ -73,6 +73,25 @@ const App = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [respondentId, setRespondentId] = useState(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [nimExists, setNimExists] = useState(false);
+
+  // Function to check if a NIM already exists in the database
+  const checkNimExists = async (nim) => {
+    if (!nim) return false;
+    
+    try {
+      const { data, error, count } = await supabase
+        .from('respondents')
+        .select('*', { count: 'exact' })
+        .eq('nim', nim);
+
+      if (error) throw error;
+      return count > 0;
+    } catch (error) {
+      console.error('Error checking NIM:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -130,8 +149,15 @@ const App = () => {
     localStorage.setItem('answers', JSON.stringify(answers));
   }, [answers]);
 
-  const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange = async (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Check NIM uniqueness when NIM field changes
+    if (name === 'nim' && value) {
+      const exists = await checkNimExists(value);
+      setNimExists(exists);
+    }
   };
 
   const handleAnswerChange = (category, question, value) => {
@@ -166,6 +192,14 @@ const App = () => {
       setSubmitStatus('submitting');
       setIsConfirmModalOpen(false); // Close modal
 
+      // Double-check NIM uniqueness before submission
+      const nimAlreadyExists = await checkNimExists(formData.nim);
+      if (nimAlreadyExists) {
+        setSubmitStatus('error');
+        alert('NIM sudah digunakan dalam survey ini. Mohon gunakan NIM yang valid.');
+        return;
+      }
+
       const { data: respondentData, error: respondentError } = await supabase
         .from('respondents')
         .insert([formData])
@@ -185,7 +219,17 @@ const App = () => {
           const response = categoryAnswers[question.text];
 
           if (response) {
-            const responseValue = ['Sangat Kurang Baik', 'Kurang Baik', 'Baik', 'Sangat Baik'].indexOf(response) + 1;
+            // Map the response text to a numeric value
+            let responseOptions;
+            // For slide 1,2,3,4,5,6,9 use the "Sesuai" options
+            if ([0, 1, 2, 3, 4, 5, 8].includes(categories.indexOf(category))) {
+              responseOptions = ['Sangat Kurang Sesuai', 'Kurang Sesuai', 'Sesuai', 'Sangat Sesuai'];
+            } else {
+              responseOptions = ['Sangat Kurang Baik', 'Kurang Baik', 'Baik', 'Sangat Baik'];
+            }
+            
+            const responseValue = responseOptions.indexOf(response) + 1;
+            
             answersToSubmit.push({
               respondent_id: newRespondentId,
               question_id: question.id,
@@ -228,7 +272,7 @@ const App = () => {
 
   const isCurrentSlideComplete = () => {
     if (activeIndex === 0) return true; // Intro page is always complete
-    if (activeIndex === 1) return isIdentityValid;
+    if (activeIndex === 1) return isIdentityValid && !nimExists; // Identity page is complete if valid and NIM is unique
     if (activeIndex === categories.length + 2) return true;
 
     if (activeIndex >= 2 && activeIndex < categories.length + 2) {
@@ -362,6 +406,8 @@ const App = () => {
                 formData={formData}
                 handleChange={handleChange}
                 onValidationChange={setIsIdentityValid}
+                nimExists={nimExists}
+                checkNimExists={checkNimExists}
               />
             </div>
           </SwiperSlide>
@@ -375,6 +421,7 @@ const App = () => {
                   questions={category.questions.map(q => q.text)}
                   handleAnswerChange={handleAnswerChange}
                   currentAnswers={answers[category.name] || {}}
+                  categoryIndex={idx}
                 />
               </div>
             </SwiperSlide>
