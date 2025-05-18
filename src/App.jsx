@@ -14,6 +14,41 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Confirmation Modal Component
+const ConfirmationModal = ({ isOpen, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-fadeIn">
+        <div className="text-center mb-6">
+          <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">Konfirmasi Pengiriman</h3>
+          <p className="mt-2 text-gray-600">Apakah Anda yakin ingin mengirimkan jawaban survey ini? Anda tidak dapat mengubah jawaban setelah dikirim.</p>
+        </div>
+        <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-4 py-2 bg-gray-200 rounded-lg text-gray-800 font-medium hover:bg-gray-300 transition-colors"
+          >
+            Tidak, Periksa Kembali
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2 bg-blue-600 rounded-lg text-white font-medium hover:bg-blue-700 transition-colors"
+          >
+            Ya, Kirim Sekarang
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   const [formData, setFormData] = useState(() => {
     const saved = localStorage.getItem('formData');
@@ -37,6 +72,7 @@ const App = () => {
   const [swiperInstance, setSwiperInstance] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [respondentId, setRespondentId] = useState(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -113,7 +149,8 @@ const App = () => {
 
     if (direction === 'next') {
       if (activeIndex === categories.length + 1) {
-        handleSubmit();
+        // Open confirmation modal instead of submitting directly
+        setIsConfirmModalOpen(true);
       } else if (activeIndex < categories.length + 2) {
         swiperInstance.slideNext();
       }
@@ -127,6 +164,7 @@ const App = () => {
   const handleSubmit = async () => {
     try {
       setSubmitStatus('submitting');
+      setIsConfirmModalOpen(false); // Close modal
 
       const { data: respondentData, error: respondentError } = await supabase
         .from('respondents')
@@ -359,7 +397,7 @@ const App = () => {
                   <h2 className="text-3xl font-bold text-red-800 mb-3">Terjadi kesalahan!</h2>
                   <p className="text-red-600 mb-4">Mohon coba lagi nanti.</p>
                   <button
-                    onClick={handleSubmit}
+                    onClick={() => setIsConfirmModalOpen(true)}
                     className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                   >
                     Coba Lagi
@@ -417,6 +455,13 @@ const App = () => {
           />
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal 
+        isOpen={isConfirmModalOpen}
+        onConfirm={handleSubmit}
+        onCancel={() => setIsConfirmModalOpen(false)}
+      />
     </div>
   );
 };
