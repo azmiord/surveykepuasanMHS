@@ -2,9 +2,9 @@
 import React from 'react';
 
 const NavigationButtons = ({ activeIndex, maxIndex, handleNavigation, disableNext }) => {
-  const isLast = activeIndex === maxIndex;
+  const isLast = activeIndex === maxIndex - 1; // Adjusted for zero-indexing of questions
   const isFirst = activeIndex === 0;
-  const isSubmitPage = activeIndex === maxIndex + 1;
+  const isSubmitPage = activeIndex === maxIndex;
 
   if (isSubmitPage) return null;
 

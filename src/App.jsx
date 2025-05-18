@@ -132,9 +132,9 @@ const App = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (direction === 'next') {
-      if (activeIndex === categories.length) {
+      if (activeIndex === categories.length + 1) {
         handleSubmit();
-      } else if (activeIndex < categories.length + 1) {
+      } else if (activeIndex < categories.length + 2) {
         swiperInstance.slideNext();
       }
     }
@@ -199,11 +199,12 @@ const App = () => {
     }
   };
 
+  // These index calculations need to properly account for the intro page
   const isIntroPage = activeIndex === 0;
   const isIdentityPage = activeIndex === 1;
-  const isSubmitPage = activeIndex === categories.length + 1;
-  const isQuestionPage = activeIndex > 1 && activeIndex <= categories.length + 1;
+  const isQuestionPage = activeIndex >= 2 && activeIndex < categories.length + 2;
   const isLastQuestionPage = activeIndex === categories.length + 1;
+  const isSubmitPage = activeIndex === categories.length + 1;
   const isThankYouPage = activeIndex === categories.length + 2;
 
   const isCurrentSlideComplete = () => {
@@ -211,9 +212,15 @@ const App = () => {
     if (activeIndex === 1) return isIdentityValid;
     if (activeIndex === categories.length + 2) return true;
 
-    const currentCategory = categories[activeIndex - 2];
-    const answered = answers[currentCategory.name] || {};
-    return currentCategory.questions.every(question => answered[question.text]);
+    if (activeIndex >= 2 && activeIndex < categories.length + 2) {
+      const currentCategory = categories[activeIndex - 2];
+      if (!currentCategory) return false;
+      
+      const answered = answers[currentCategory.name] || {};
+      return currentCategory.questions.every(question => answered[question.text]);
+    }
+    
+    return true;
   };
 
   if (isLoading) {
@@ -238,7 +245,10 @@ const App = () => {
         )}
         
         {isQuestionPage && (
-          <ProgressIndicator activeIndex={activeIndex - 1} total={categories.length} />
+          <ProgressIndicator 
+            activeIndex={activeIndex - 2} 
+            total={categories.length} 
+          />
         )}
 
         <Swiper
@@ -399,7 +409,7 @@ const App = () => {
 
         {!isThankYouPage && !isIntroPage && (
           <NavigationButtons
-            activeIndex={activeIndex - 1}
+            activeIndex={isIdentityPage ? 0 : activeIndex - 2}
             maxIndex={categories.length}
             handleNavigation={handleNavigation}
             disableNext={!isCurrentSlideComplete() || submitStatus === 'submitting'}
