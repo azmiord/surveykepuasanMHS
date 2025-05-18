@@ -36,27 +36,7 @@ const App = () => {
   const [submitStatus, setSubmitStatus] = useState(null);
   const [swiperInstance, setSwiperInstance] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
-
-  const handleSubmitAnother = () => {
-    setFormData({
-      nama: '', nim: '', fakultas: '', prodi: '', asal_ut: '',
-      semester: '', email: '', no_hp: ''
-    });
-
-    setIsIdentityValid(false);
-    setAnswers({});
-    setSubmitStatus(null);
-
-    localStorage.removeItem('formData');
-    localStorage.removeItem('answers');
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    setTimeout(() => {
-      swiperInstance.slideTo(0);
-      setActiveIndex(0);
-    }, 100);
-  };
+  const [respondentId, setRespondentId] = useState(null);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -155,7 +135,8 @@ const App = () => {
 
       if (respondentError) throw respondentError;
 
-      const respondentId = respondentData[0].id;
+      const newRespondentId = respondentData[0].id;
+      setRespondentId(newRespondentId);
 
       const answersToSubmit = [];
 
@@ -168,7 +149,7 @@ const App = () => {
           if (response) {
             const responseValue = ['Sangat Kurang Baik', 'Kurang Baik', 'Baik', 'Sangat Baik'].indexOf(response) + 1;
             answersToSubmit.push({
-              respondent_id: respondentId,
+              respondent_id: newRespondentId,
               question_id: question.id,
               response: responseValue
             });
@@ -386,21 +367,41 @@ const App = () => {
                 </>
               ) : (
                 <>
-                  <svg className="w-24 h-24 text-green-500 mb-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <h2 className="text-3xl font-bold text-blue-800 mb-3">Terima kasih!</h2>
-                  <p className="text-blue-600 text-lg mb-4">Kami menghargai partisipasi Anda dalam survei ini.</p>
-                  <p className="text-blue-500 mb-6">Masukan Anda membantu kami meningkatkan layanan Universitas Terbuka.</p>
-                  <button
-                    onClick={handleSubmitAnother}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 font-medium flex items-center gap-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Kirim Tanggapan Lain
-                  </button>
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-10 rounded-2xl border border-blue-100 shadow-lg w-full max-w-md">
+                    <div className="flex justify-center mb-6">
+                      <div className="relative">
+                        <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center">
+                          <svg className="w-16 h-16 text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center animate-pulse">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 5h14l-4.5 8.5L14 19H10l3-6H5" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <h2 className="text-3xl font-bold text-blue-800 mb-3">Terima Kasih!</h2>
+                    
+                    <div className="bg-white px-6 py-4 rounded-xl shadow-inner border border-blue-50 mb-6">
+                      <p className="text-blue-600 font-medium">
+                        Data Anda telah berhasil direkam dengan ID:
+                      </p>
+                      <p className="text-blue-800 font-bold text-lg">
+                        {respondentId ? `#${respondentId}` : 'Tersimpan'}
+                      </p>
+                    </div>
+                    
+                    <p className="text-gray-700">
+                      Partisipasi Anda dalam survei ini sangat berarti bagi kami. Masukan Anda akan digunakan untuk meningkatkan kualitas layanan Universitas Terbuka.
+                    </p>
+                    
+                    <div className="mt-6 pt-4 border-t border-blue-100">
+                      <p className="text-blue-700 font-bold">UNIVERSITAS TERBUKA</p>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
