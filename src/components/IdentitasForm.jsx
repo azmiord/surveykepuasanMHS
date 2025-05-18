@@ -78,13 +78,14 @@ const IdentitasForm = ({ formData, handleChange, onValidationChange }) => {
 
     if (!formData.fakultas) newErrors.fakultas = 'Wajib pilih fakultas';
     if (!formData.prodi) newErrors.prodi = 'Wajib pilih prodi';
+    if (!formData.nim) newErrors.nim = 'Wajib isi NIM';
     if (!formData.asal_ut) newErrors.asal_ut = 'Wajib pilih asal UT';
-    if (!formData.semester || isNaN(formData.semester) || formData.semester < 1 || formData.semester > 20) {
-      newErrors.semester = 'Semester harus antara 1–20';
+    if (!formData.semester || isNaN(formData.semester) ||  formData.semester > 3) {
+      newErrors.semester = 'Minimal semester 3';
     }
 
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Format email tidak valid';
+      newErrors.email = 'Gunakan email Ecampus';
     }
 
     if (!formData.no_hp || !/^08\d{8,11}$/.test(formData.no_hp)) {
@@ -143,14 +144,14 @@ const IdentitasForm = ({ formData, handleChange, onValidationChange }) => {
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg max-w-2xl mx-auto">
       <form className="space-y-5">
-        {renderField({ label: 'Nama', name: 'nama' })}
-        {renderField({ label: 'NIM', name: 'nim' })}
-        {renderField({ label: 'Fakultas', name: 'fakultas', options: Object.keys(prodiOptions) })}
-        {renderField({ label: 'Program Studi', name: 'prodi', options: prodiOptions[formData.fakultas] || [] })}
-        {renderField({ label: 'Asal UT Daerah', name: 'asal_ut', options: ['UT Ambon', 'UT Banda Aceh', 'UT Bandar Lampung', 'UT Bandung', 'UT Banjarmasin', 'UT Batam', 'UT Bengkulu', 'UT Bogor', 'UT Denpasar', 'UT Gorontalo', 'UT Jakarta', 'UT Jambi', 'UT Jayapura', 'UT Jember', 'UT Kendari', 'UT Kupang', 'UT Luar Negeri', 'UT Majene', 'UT Makassar', 'UT Malang', 'UT Manado', 'UT Mataram', 'UT Medan', 'UT Padang', 'UT Palangkaraya', 'UT Palembang', 'UT Palu', 'UT Pangkal Pinang', 'UT Pekanbaru', 'UT Pontianak', 'UT Purwokerto', 'UT Samarinda', 'UT Semarang', 'UT Serang', 'UT Sorong', 'UT Surabaya', 'UT Surakarta', 'UT Tarakan', 'UT Ternate', 'UT Yogyakarta'] })}
-        {renderField({ label: 'Semester', name: 'semester', type: 'number' })}
+        {renderField({ label: 'Nama Lengkap', name: 'nama' })}
         {renderField({ label: 'Email', name: 'email', type: 'email' })}
         {renderField({ label: 'No. HP (WhatsApp)', name: 'no_hp' })}
+        {renderField({ label: 'NIM', name: 'nim' })}
+        {renderField({ label: 'Asal UT Daerah', name: 'asal_ut', options: ['UT Ambon', 'UT Banda Aceh', 'UT Bandar Lampung', 'UT Bandung', 'UT Banjarmasin', 'UT Batam', 'UT Bengkulu', 'UT Bogor', 'UT Denpasar', 'UT Gorontalo', 'UT Jakarta', 'UT Jambi', 'UT Jayapura', 'UT Jember', 'UT Kendari', 'UT Kupang', 'UT Luar Negeri', 'UT Majene', 'UT Makassar', 'UT Malang', 'UT Manado', 'UT Mataram', 'UT Medan', 'UT Padang', 'UT Palangkaraya', 'UT Palembang', 'UT Palu', 'UT Pangkal Pinang', 'UT Pekanbaru', 'UT Pontianak', 'UT Purwokerto', 'UT Samarinda', 'UT Semarang', 'UT Serang', 'UT Sorong', 'UT Surabaya', 'UT Surakarta', 'UT Tarakan', 'UT Ternate', 'UT Yogyakarta'] })}
+        {renderField({ label: 'Fakultas', name: 'fakultas', options: Object.keys(prodiOptions) })}
+        {renderField({ label: 'Program Studi', name: 'prodi', options: prodiOptions[formData.fakultas] || [] })}        
+        {renderField({ label: 'Semester', name: 'semester', type: 'number' })}
       </form>
     </div>
   );
