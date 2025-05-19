@@ -480,7 +480,7 @@ const App = () => {
                     </div>
                     
                     <p className="text-gray-700">
-                      Partisipasi Anda dalam survei ini sangat berarti bagi kami. Masukan Anda akan digunakan untuk meningkatkan kualitas layanan Universitas Terbuka.
+                      Partisipasi Anda dalam survei ini sangat berarti bagi kami. Masukan Anda akan digunakan untuk meningkatkan kualitas pelayanan Universitas Terbuka.
                     </p>
                     
                     <div className="mt-6 pt-4 border-t border-blue-100">
